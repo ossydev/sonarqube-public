@@ -19,11 +19,9 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-        
+
       - name: Run
         run: node index.js
-       
-
 
   sonarqube:
     name: SonarQube
@@ -31,8 +29,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+          fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of analysis
       - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v4
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          
+      - name: Fail if quality gate is not passed
+        run: |
+          curl -u ${{ secrets.SONAR_TOKEN }} https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }} | jq -e '.projectStatus.status == "OK"'
+          continue-on-error: false
